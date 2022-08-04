@@ -1,0 +1,1 @@
+CREATE DATABASE forkify_app_api;
