@@ -1,9 +1,15 @@
 const Recipe = require("../models/recipe");
 
 exports.getRecipes = (req, res, next) => {
-  Recipe.fetchAll()
+  Recipe.fetchAllRecipes()
     .then(({ rows: recipes }) => {
       // console.log(recipes);
+      if (!recipes) {
+        const error = new Error("Could not find recipes.");
+        error.statusCode = 404;
+        throw error;
+      }
+
       res.status(200).json({
         status: "success",
         results: recipes.length,
@@ -17,24 +23,35 @@ exports.getRecipes = (req, res, next) => {
 
 exports.getRecipe = (req, res, next) => {
   const recipeId = +req.params.recipeId;
-  Recipe.findById(recipeId)
+  let wholeRecipe;
+  Recipe.findRecipe(recipeId)
     .then(({ rows: [recipe] }) => {
-      console.log(recipe);
+      if (!recipe) {
+        const error = new Error("Could not find recipe.");
+        error.statusCode = 404;
+        throw error;
+      }
+
+      wholeRecipe = recipe;
+      return Recipe.findRecipeIngredients(recipeId);
+    })
+    .then(({ rows: ingred }) => {
+      if (!ingred) {
+        const error = new Error("Could not find Ingredients.");
+        error.statusCode = 404;
+        throw error;
+      }
+
+      wholeRecipe.ingredients = ingred;
+      // console.log("WHOLE", wholeRecipe);
       res.status(200).json({
         status: "success",
         data: {
-          recipe: recipe,
-          // ingredients: [
-          //   {
-          //     quantity: recipe.quantity,
-          //     unit: recipe.unit,
-          //     description: recipe.description,
-          //   },
-          // ],
+          recipe: wholeRecipe,
         },
       });
     })
-    .catch((err) => console.log());
+    .catch((err) => console.log(err));
 };
 
 exports.createRecipe = (req, res, next) => {
@@ -48,35 +65,23 @@ exports.createRecipe = (req, res, next) => {
     req.body.cooking_time,
     req.body.ingredients
   );
+  // console.log("RECIPE", recipe);
+
+  let wholeRecipe;
   recipe
-    .save()
-    .then(({ rows: [recipe] }) => {
+    .saveRecipe()
+    .then(({ rows: [rec] }) => {
+      wholeRecipe = rec;
+      return recipe.saveIngredients(wholeRecipe.id);
+    })
+    .then((ingred) => {
+      wholeRecipe.ingredients = ingred;
       res.status(200).json({
         status: "success",
         data: {
-          recipe: recipe,
+          recipe: wholeRecipe,
         },
       });
     })
-    .catch((err) => console.log());
+    .catch((err) => console.log(err));
 };
-
-// if (!rows) {
-//   const error = new Error("Could not find recipe.");
-//   error.statusCode = 404;
-//   throw error;
-// }
-
-// status: "success",
-// results: 1,
-// data: {
-//   recipes: [
-//     {
-//       publisher: "Closet Cooking",
-//       image_url:
-//         "http://forkify-api.herokuapp.com/images/BBQChickenPizzawithCauliflowerCrust5004699695624ce.jpg",
-//       title: "Cauliflower Pizza Crust",
-//       id: 1,
-//     },
-//   ],
-// },

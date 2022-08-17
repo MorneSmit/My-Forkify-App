@@ -19,9 +19,9 @@ module.exports = class Recipe {
     this.ingredients = ingredients;
   }
 
-  save() {
+  saveRecipe() {
     return db.query(
-      "INSERT INTO recipes (title, publisher, source_url, image_url, servings, cooking_time, ingredients) VALUES ($1, $2, $3 , $4, $5, $6, $7) RETURNING *",
+      "INSERT INTO recipes (title, publisher, source_url, image_url, servings, cooking_time) VALUES ($1, $2, $3 , $4, $5, $6) RETURNING *",
       [
         this.title,
         this.publisher,
@@ -29,23 +29,32 @@ module.exports = class Recipe {
         this.image_url,
         this.servings,
         this.cooking_time,
-        this.ingredients,
       ]
     );
   }
 
-  // static findById(id) {
-  //   return db.query("SELECT * FROM recipes WHERE id = $1", [id]);
-  // }
+  saveIngredients(recipeId) {
+    this.ingredients.forEach((ingred) => {
+      db.query(
+        "INSERT INTO recipe_ingredients (quantity, unit, description, recipe_id) VALUES ($1, $2, $3, $4)",
+        [ingred.quantity, ingred.unit, ingred.description, recipeId]
+      );
+    });
+    return this.ingredients;
+  }
 
-  static findById(id) {
+  static findRecipe(id) {
+    return db.query("SELECT * FROM recipes WHERE id = $1", [id]);
+  }
+
+  static findRecipeIngredients(id) {
     return db.query(
-      "SELECT r.id, title, publisher, source_url, image_url, servings, cooking_time FROM recipes AS r WHERE r.id = $1",
+      "SELECT quantity, unit, description FROM recipe_ingredients WHERE recipe_id = $1",
       [id]
     );
   }
 
-  static fetchAll() {
+  static fetchAllRecipes() {
     return db.query("SELECT id, title, publisher, image_url FROM recipes");
   }
 };
