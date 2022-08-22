@@ -1,7 +1,9 @@
 const Recipe = require("../models/recipe");
 
 exports.getRecipes = (req, res, next) => {
-  Recipe.fetchAllRecipes()
+  const searchQuery = req.query.search;
+
+  Recipe.fetchAllRecipes(searchQuery)
     .then(({ rows: recipes }) => {
       // console.log(recipes);
       if (!recipes) {
@@ -55,6 +57,7 @@ exports.getRecipe = (req, res, next) => {
 };
 
 exports.createRecipe = (req, res, next) => {
+  const key = req.query.key;
   // console.log(req.body);
   const recipe = new Recipe(
     req.body.title,

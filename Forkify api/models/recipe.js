@@ -54,7 +54,14 @@ module.exports = class Recipe {
     );
   }
 
-  static fetchAllRecipes() {
-    return db.query("SELECT id, title, publisher, image_url FROM recipes");
+  static fetchAllRecipes(searchQuery) {
+    if (searchQuery === "*") {
+      return db.query("SELECT id, title, publisher, image_url FROM recipes");
+    }
+
+    return db.query(
+      "SELECT id, title, publisher, image_url FROM recipes WHERE title ILIKE $1",
+      [`%${searchQuery}%`]
+    );
   }
 };
