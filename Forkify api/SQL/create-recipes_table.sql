@@ -8,7 +8,8 @@ CREATE TABLE recipes (
   source_url TEXT,
   image_url TEXT NOT NULL,
   servings INT NOT NULL,
-  cooking_time INT NOT NULL
+  cooking_time INT NOT NULL,
+  "key" VARCHAR(255) DEFAULT NULL 
 );
 
 CREATE TABLE recipe_ingredients (

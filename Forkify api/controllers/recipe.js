@@ -2,21 +2,37 @@ const Recipe = require("../models/recipe");
 
 exports.getRecipes = (req, res, next) => {
   const searchQuery = req.query.search;
+  const key = req.query.key;
+  const allRecipes = [];
 
-  Recipe.fetchAllRecipes(searchQuery)
+  Recipe.fetchYourRecipes(searchQuery, key)
     .then(({ rows: recipes }) => {
-      // console.log(recipes);
+      // console.log("MY Rec", recipes);
       if (!recipes) {
         const error = new Error("Could not find recipes.");
         error.statusCode = 404;
         throw error;
       }
 
+      allRecipes.push(...recipes);
+      return Recipe.fetchRestRecipes(searchQuery);
+    })
+    .then(({ rows: recipes }) => {
+      // console.log("Rec", recipes);
+      if (!recipes) {
+        const error = new Error("Could not find recipes.");
+        error.statusCode = 404;
+        throw error;
+      }
+
+      allRecipes.push(...recipes);
+      console.log("ALL", allRecipes);
+
       res.status(200).json({
         status: "success",
-        results: recipes.length,
+        results: allRecipes.length,
         data: {
-          recipes: recipes,
+          recipes: allRecipes,
         },
       });
     })
@@ -57,7 +73,6 @@ exports.getRecipe = (req, res, next) => {
 };
 
 exports.createRecipe = (req, res, next) => {
-  const key = req.query.key;
   // console.log(req.body);
   const recipe = new Recipe(
     req.body.title,
@@ -66,7 +81,8 @@ exports.createRecipe = (req, res, next) => {
     req.body.image_url,
     req.body.servings,
     req.body.cooking_time,
-    req.body.ingredients
+    req.body.ingredients,
+    req.query.key
   );
   // console.log("RECIPE", recipe);
 

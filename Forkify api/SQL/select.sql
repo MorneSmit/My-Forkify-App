@@ -4,4 +4,4 @@
 -- FROM recipes AS r
 -- INNER JOIN ingredients AS i ON r.id = i.recipe_id
 -- WHERE r.id = 1;
-SELECT id, title, publisher, image_url FROM recipes WHERE title ILIKE '%recipe%';
+SELECT id, title, publisher, image_url, "key" FROM recipes WHERE title ILIKE '%re%' AND "key" IS NULL;

@@ -8,7 +8,8 @@ module.exports = class Recipe {
     image_url,
     servings,
     cooking_time,
-    ingredients
+    ingredients,
+    key
   ) {
     this.title = title;
     this.publisher = publisher;
@@ -17,11 +18,12 @@ module.exports = class Recipe {
     this.servings = servings;
     this.cooking_time = cooking_time;
     this.ingredients = ingredients;
+    this.key = key;
   }
 
   saveRecipe() {
     return db.query(
-      "INSERT INTO recipes (title, publisher, source_url, image_url, servings, cooking_time) VALUES ($1, $2, $3 , $4, $5, $6) RETURNING *",
+      "INSERT INTO recipes (title, publisher, source_url, image_url, servings, cooking_time, key) VALUES ($1, $2, $3 , $4, $5, $6, $7) RETURNING *",
       [
         this.title,
         this.publisher,
@@ -29,6 +31,7 @@ module.exports = class Recipe {
         this.image_url,
         this.servings,
         this.cooking_time,
+        this.key,
       ]
     );
   }
@@ -54,13 +57,22 @@ module.exports = class Recipe {
     );
   }
 
-  static fetchAllRecipes(searchQuery) {
+  static fetchYourRecipes(searchQuery, key) {
+    return db.query(
+      "SELECT id, title, publisher, image_url, key FROM recipes WHERE title ILIKE $1 AND key = $2",
+      [`%${searchQuery}%`, key]
+    );
+  }
+
+  static fetchRestRecipes(searchQuery) {
     if (searchQuery === "*") {
-      return db.query("SELECT id, title, publisher, image_url FROM recipes");
+      return db.query(
+        "SELECT id, title, publisher, image_url, key FROM recipes"
+      );
     }
 
     return db.query(
-      "SELECT id, title, publisher, image_url FROM recipes WHERE title ILIKE $1",
+      "SELECT id, title, publisher, image_url FROM recipes WHERE title ILIKE $1 AND key IS NULL",
       [`%${searchQuery}%`]
     );
   }
